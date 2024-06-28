@@ -1,0 +1,9 @@
+# Use a minimal base image
+FROM nginx:alpine
+
+# Copy a basic HTML page
+COPY index.html /usr/share/nginx/html/index.html
+
+EXPOSE 80
+# Run Nginx
+CMD ["nginx", "-g", "daemon off;"]
