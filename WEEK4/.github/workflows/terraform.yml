@@ -1,9 +1,10 @@
 name: Terraform CI/CD
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - master  # Adjust branch as needed
+      - master
 
 jobs:
   terraform:
