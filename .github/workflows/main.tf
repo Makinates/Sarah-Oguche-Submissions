@@ -1,13 +1,13 @@
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-1"
 }
 
 # Create public subnet
 resource "aws_subnet" "public_subnet" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.public_subnet_cidr
+  vpc_id            = "vpc-05b0ca6c03e94aa26"
+  cidr_block        = "10.0.6.0/24"  # Updated CIDR block
   map_public_ip_on_launch = true
-  availability_zone = var.aws_region
+  availability_zone = "us-east-1a"
   tags = {
     Name = "Public Subnet"
   }
@@ -15,9 +15,9 @@ resource "aws_subnet" "public_subnet" {
 
 # Create private subnet
 resource "aws_subnet" "private_subnet" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnet_cidr
-  availability_zone = var.aws_region
+  vpc_id            = "vpc-05b0ca6c03e94aa26"
+  cidr_block        = "10.0.5.0/24"  # Updated CIDR block
+  availability_zone = "us-east-1a"
   tags = {
     Name = "Private Subnet"
   }
@@ -27,7 +27,7 @@ resource "aws_subnet" "private_subnet" {
 resource "aws_security_group" "public_sg" {
   name        = "public_sg"
   description = "Allow SSH and HTTP"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = "vpc-05b0ca6c03e94aa26"
 
   ingress {
     from_port   = 22
@@ -55,13 +55,13 @@ resource "aws_security_group" "public_sg" {
 resource "aws_security_group" "private_sg" {
   name        = "private_sg"
   description = "Allow internal traffic"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = "vpc-05b0ca6c03e94aa26"
 
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = [aws_subnet.private_subnet.cidr_block]
+    cidr_blocks = ["10.0.0.0/16"]
   }
 
   egress {
@@ -74,7 +74,7 @@ resource "aws_security_group" "private_sg" {
 
 # NAT Gateway and EIP
 resource "aws_eip" "nat_eip" {
-  vpc      = true
+  domain = "vpc"
 }
 
 resource "aws_nat_gateway" "nat" {
@@ -84,11 +84,11 @@ resource "aws_nat_gateway" "nat" {
 
 # Public route table
 resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = "vpc-05b0ca6c03e94aa26"
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
+    gateway_id = "igw-0256891a23a381290"
   }
 
   tags = {
@@ -103,7 +103,7 @@ resource "aws_route_table_association" "public_rt_assoc" {
 
 # Private route table
 resource "aws_route_table" "private_rt" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = "vpc-05b0ca6c03e94aa26"
 
   route {
     cidr_block     = "0.0.0.0/0"
@@ -172,29 +172,33 @@ resource "aws_secretsmanager_secret" "db_credentials" {
 resource "aws_secretsmanager_secret_version" "db_credentials_version" {
   secret_id     = aws_secretsmanager_secret.db_credentials.id
   secret_string = jsonencode({
-    username = "admin",
+    username = "admin"
     password = "your_password"
   })
 }
 
-# Bastion host instance
+# Bastion Host
 resource "aws_instance" "bastion" {
-  ami           = "ami-01e076d5c9e040974" # Example Amazon Linux 2 AMI
+  ami           = "ami-01e076d5c9e040974"  # Example Amazon Linux 2 AMI
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public_subnet.id
   security_groups = [aws_security_group.public_sg.id]
+
+  key_name = "sarahkeypair2"
 
   tags = {
     Name = "Bastion Host"
   }
 }
 
-# Application server instance
+# App Server
 resource "aws_instance" "app_server" {
-  ami           = "ami-01e076d5c9e040974" # Example Amazon Linux 2 AMI
+  ami           = "ami-01e076d5c9e040974"  # Example Amazon Linux 2 AMI
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.private_subnet.id
   security_groups = [aws_security_group.private_sg.id]
+
+  key_name = "sarahkeypair2"
 
   tags = {
     Name = "App Server"
