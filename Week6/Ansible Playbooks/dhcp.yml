@@ -1,0 +1,28 @@
+---
+- name: Configure DHCP server
+  hosts: branch_office
+  become: yes
+  tasks:
+    - name: Install isc-dhcp-server
+      apt:
+        name: isc-dhcp-server
+        state: present
+
+    - name: Configure DHCP server
+      copy:
+        src: dhcpd.conf
+        dest: /etc/dhcp/dhcpd.conf
+      notify:
+        - restart dhcp server
+
+    - name: Ensure DHCP service is running
+      systemd:
+        name: isc-dhcp-server
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart dhcp server
+      systemd:
+        name: isc-dhcp-server
+        state: restarted

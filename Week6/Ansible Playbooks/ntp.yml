@@ -1,0 +1,28 @@
+---
+- name: Configure NTP server
+  hosts: branch_office
+  become: yes
+  tasks:
+    - name: Install ntp
+      apt:
+        name: ntp
+        state: present
+
+    - name: Configure NTP
+      copy:
+        src: ntp.conf
+        dest: /etc/ntp.conf
+      notify:
+        - restart ntp
+
+    - name: Ensure NTP service is running
+      systemd:
+        name: ntp
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart ntp
+      systemd:
+        name: ntp
+        state: restarted

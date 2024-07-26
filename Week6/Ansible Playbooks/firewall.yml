@@ -1,0 +1,31 @@
+---
+- name: Configure firewall
+  hosts: branch_office
+  become: yes
+  tasks:
+    - name: Install iptables
+      apt:
+        name: iptables
+        state: present
+
+    - name: Set default policies
+      command: iptables -P {{ item.chain }} {{ item.policy }}
+      with_items:
+        - { chain: INPUT, policy: DROP }
+        - { chain: FORWARD, policy: DROP }
+        - { chain: OUTPUT, policy: ACCEPT }
+
+    - name: Allow incoming traffic for necessary services
+      command: iptables -A INPUT -p {{ item.protocol }} --dport {{ item.port }} -j ACCEPT
+      with_items:
+        - { protocol: tcp, port: 22 }
+        - { protocol: udp, port: 67 }
+        - { protocol: udp, port: 68 }
+        - { protocol: tcp, port: 53 }
+
+    - name: Save iptables rules
+      command: iptables-save > /etc/iptables/rules.v4
+
+  handlers:
+    - name: restart firewall
+      command: systemctl restart netfilter-persistent

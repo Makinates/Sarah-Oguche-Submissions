@@ -1,0 +1,28 @@
+---
+- name: Configure DNS server
+  hosts: branch_office
+  become: yes
+  tasks:
+    - name: Install BIND9
+      apt:
+        name: bind9
+        state: present
+
+    - name: Configure BIND9
+      copy:
+        src: named.conf.local
+        dest: /etc/bind/named.conf.local
+      notify:
+        - restart bind9
+
+    - name: Ensure BIND9 service is running
+      systemd:
+        name: bind9
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart bind9
+      systemd:
+        name: bind9
+        state: restarted
