@@ -1,0 +1,26 @@
+Vagrant.configure("2") do |config|
+  # Main Office Server
+  config.vm.define "main_office" do |main|
+    main.vm.box = "ubuntu/bionic64"
+    main.vm.network "private_network", ip: "192.168.1.2", adapter: 2
+    main.vm.network "private_network", ip: "10.1.0.2", adapter: 3
+    main.vm.provision "shell", path: "main-office/provision.sh"
+  end
+
+  # Branch Office Server
+  config.vm.define "branch_office" do |branch|
+    branch.vm.box = "ubuntu/bionic64"
+    branch.vm.network "private_network", ip: "192.168.2.2", adapter: 2
+    branch.vm.network "private_network", ip: "10.1.0.3", adapter: 3
+    branch.vm.provision "shell", path: "branch-office/provision.sh"
+  end
+
+  # Client VM
+  config.vm.define "client" do |client|
+    client.vm.box = "ubuntu/bionic64"
+    client.vm.network "private_network", ip: "192.168.2.3", adapter: 2
+    client.vm.provision "shell", path: "client/provision.sh"
+  end
+end
+
+  
